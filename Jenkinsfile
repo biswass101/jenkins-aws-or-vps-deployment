@@ -14,19 +14,23 @@ node {
         )
     }
 
-    stage('Deploy to EC2/VPS') {
-        echo 'Deploying to EC2/VPS...'
-        sh """
-            sudo mkdir -p ${appDir}
-            sudo chown -R jenkins:jenkins ${appDir}
+    stage('Deploy to VPS') {
+        echo 'Deploying to VPS...'
 
-            rsync -av --delete --exclude='.git' --exclude='node_modules' ./ ${appDir}
+        sh """
+            rsync -av --delete \
+                --exclude='.git' \
+                --exclude='node_modules' \
+                ./ ${appDir}/
 
             cd ${appDir}
-            sudo npm install
-            sudo npm run build
-            sudo fuser -k 3000/tcp || true
-            npm run start
+
+            npm install
+            npm run build
+
+            pm2 delete nextjs-app || true
+            pm2 start npm --name nextjs-app -- start
+            pm2 save
         """
     }
 }
