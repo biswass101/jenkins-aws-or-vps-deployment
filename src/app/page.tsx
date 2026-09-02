@@ -10,7 +10,7 @@ export default function Home() {
       width={400}
      />
      <h1 className="text-7xl from">Welcome to Jenkins CI/CD</h1>
-     <p>Deploy - 3</p>
+     <p>Deploy - 4</p>
     </div>
   );
 }
