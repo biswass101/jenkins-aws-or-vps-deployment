@@ -47,10 +47,10 @@ pipeline {
             steps {
                 emailext(
                     subject: 'Next.js App Deployed Successfully on EC2',
-                    body: 'Your Next.js app is deployed! http://43.204.217.199:${PORT}/',
-                    to: '${EMAIL}'
+                    body: "Your Next.js app is deployed! http://43.204.217.199:${PORT}/",
+                    to: "${EMAIL}"
                 )
-            }
+            }   
         }
     }
 }
