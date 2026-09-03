@@ -1,36 +1,52 @@
-node {
-    def appDir = '/var/www/nextjs-app'
+pipeline {
+    agent any
 
-    stage('Clean Workspace') {
-        echo "Cleaning Jenkins Workspace"
-        deleteDir()
+    environment {
+        CONTAINER_NAME = "next-app"
+        IMAGE_NAME = "next-image"
+        EMAIL = "biswassnaeemcse@gmail.com"
+        PORT = "3000"
     }
 
-    stage('Clone Repo') {
-        echo "Cloning The Repo..."
-        git(
-            branch: 'main',
-            url: 'https://github.com/biswass101/jenkins-aws-or-vps-deployment'
-        )
-    }
+    stages {
+        stage('Clone Repo') {
+            steps{
+                git branch: 'main', "https://github.com/biswass101/jenkins-aws-or-vps-deployment.git"
+            }
+        }
 
-    stage('Deploy to VPS') {
-        echo 'Deploying to VPS...'
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t ${IMAGE_NAME}'
+            }
+        }
 
-        sh """
-            rsync -av --delete \
-                --exclude='.git' \
-                --exclude='node_modules' \
-                ./ ${appDir}/
+        stage('Stop and remove previous container') {
+            steps {
+                sh ```
+                    docker stop ${CONTAINER_NAME} || true
+                    docker rm ${CONTAINER_NAME} || true
+                ```
+            }
+        }
 
-            cd ${appDir}
+        stage('Docker container run') {
+            steps {
+                sh ```
+                    docker run -d -p ${PORT}:${PORT} --name ${CONTAINER_NAME} ${IMAGE_NAME}
+                ```
+            }
+        }
 
-            npm install
-            npm run build
-
-            pm2 delete nextjs-app || true
-            pm2 start npm --name nextjs-app -- start
-            pm2 save
-        """
+        stage('Send Email Notification') {
+            steps {
+                emailText(
+                    subject: "Next Js App Deployed Successfully on EC2",
+                    body: "Your NextJs app is Deployed! http://43.204.217.199/${PORT}/"
+                    to: "${EMAIL}"
+                )
+            }
+        }
     }
 }
+
